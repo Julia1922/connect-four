@@ -1,0 +1,435 @@
+package connectfour
+fun checkEntry(playGround : MutableList<MutableList<Char>>, columns: Int, rows: Int, name: String): String  {
+    val regex = Regex("\\d?\\d?\\d")
+
+    while (true) {
+        println("$name's turn:")
+        val input = readLine()!!
+        if (input == "end") {
+            println("game over!")
+            return "end"
+        }
+        else if (!regex.matches(input)) {
+            println("incorrect column number")
+        }
+        else {
+            val columnsNumber = input.toInt()
+            if (columnsNumber in 1..columns) {
+                if (playGround[columnsNumber - 1].size < rows) {
+                    return "${columnsNumber -1}"
+                }
+                else {
+                    println("Column $columnsNumber is full")
+                }
+            }
+            else {
+                println("The column number is out of range (1 - $columns)")
+            }
+        }
+    }
+}
+fun draw( playGround: MutableList<MutableList<Char>>, columns: Int, rows: Int){
+    for (i in 0 until columns) {
+        if (playGround[i].size < rows) {
+            for (j in 1..rows - playGround[i].size)
+                playGround[i].add(' ')
+        }
+
+    }
+    for (n in 1..columns) {
+        print(" $n")
+    }
+    println()
+
+    for (i in rows - 1  downTo 0) {
+        for (j in 0 until columns) {
+            print("║${playGround[j][i]}")
+        }
+        println('║')
+    }
+    print("╚")
+    repeat(columns - 1) {
+        print ("═╩")
+    }
+    println("═╝")
+    for (i in 0 until columns ) {
+        playGround[i].removeAll(elements = listOf(' '))
+    }
+}
+fun drawGround(columns: Int,rows: Int) {
+    for (n in 1..columns) {
+        print("$n ")
+    }
+    println()
+    for (j in 1..rows) {
+        for (i in 0..columns) {
+            print ("║ ")
+        }
+        println()
+    }
+    print("╚")
+    repeat(columns - 1) {
+        print ("═╩")
+    }
+    println("═╝")
+}
+fun itIsDraw (playGround: MutableList<MutableList<Char>>,columns: Int,rows: Int): Boolean  {
+    var countFull = 0
+    for (i in 0 until columns) {
+        if (playGround[i].size == rows) {
+            countFull++
+        }
+    }
+    if (countFull == columns) return true
+    else return false
+}
+fun winColumn (playGround: MutableList<MutableList<Char>>, columnNumber: Int, column: Int, rows: Int): Boolean {
+    var countMatches = 0
+    if (playGround[columnNumber].size > COUNTMATCHESWIN) {
+        val ch = playGround[columnNumber][playGround[columnNumber].lastIndex]
+        for (i in playGround[columnNumber].lastIndex - 1 downTo playGround[columnNumber].lastIndex - 3) {
+            if (playGround[columnNumber][i] == ch) {
+                countMatches++
+            }
+        }
+    }
+    if (countMatches == COUNTMATCHESWIN ) return true
+    else return false
+}
+fun rowFullRight(playGround: MutableList<MutableList<Char>>, columnNumber: Int): Boolean {
+    var countRow = 0
+    for (i in columnNumber + 1..columnNumber + COUNTMATCHESWIN) {
+        if (playGround[i].size >= playGround[columnNumber].size) countRow++
+    }
+    if (countRow == COUNTMATCHESWIN) return true
+    else return false
+}
+fun rowFullLeft(playGround: MutableList<MutableList<Char>>, columnNumber: Int): Boolean {
+    var countRow = 0
+    for (i in columnNumber - 1 downTo columnNumber - COUNTMATCHESWIN) {
+        if (playGround[i].size >= playGround[columnNumber].size) countRow++
+    }
+    if (countRow == COUNTMATCHESWIN) return true
+    else return false
+}
+fun directionRight(playGround: MutableList<MutableList<Char>>, columnNumber: Int): Boolean {
+    return (playGround.lastIndex - columnNumber >= COUNTMATCHESWIN)
+}
+fun directionLeft(columnNumber: Int): Boolean {
+    return (0 - columnNumber <= -COUNTMATCHESWIN)
+}
+fun rowWin(playGround: MutableList<MutableList<Char>>,columnNumber: Int,columns: Int,rows: Int):Boolean {
+    val ch = playGround[columnNumber][playGround[columnNumber].lastIndex]
+    val rowWin = playGround[columnNumber].lastIndex
+    var countMatches = 0
+    when {
+        directionRight(playGround, columnNumber) && directionLeft(columnNumber) && rowFullRight(
+            playGround,
+            columnNumber
+        ) && rowFullLeft(playGround, columnNumber)
+        -> {
+            for (i in columnNumber + 1..columnNumber + COUNTMATCHESWIN) {
+                if (playGround[i][rowWin] == ch) countMatches++
+            }
+            if (countMatches == COUNTMATCHESWIN) return true
+            else countMatches = 0
+            for (i in columnNumber - 1 downTo columnNumber - COUNTMATCHESWIN) {
+                if (playGround[i][rowWin] == ch) countMatches++
+            }
+            if (countMatches == COUNTMATCHESWIN) return true
+        }
+        directionRight(playGround, columnNumber) && rowFullRight(playGround, columnNumber) -> {
+            for (i in columnNumber + 1..columnNumber + COUNTMATCHESWIN) {
+                if (playGround[i][rowWin] == ch) countMatches++
+            }
+            if (countMatches == COUNTMATCHESWIN) return true
+        }
+        directionLeft(columnNumber) && rowFullLeft(playGround, columnNumber) -> {
+            for (i in columnNumber - 1 downTo columnNumber - COUNTMATCHESWIN) {
+                if (playGround[i][rowWin] == ch) countMatches++
+            }
+            if (countMatches == COUNTMATCHESWIN) return true
+        }
+    }
+    return false
+}
+fun directionDown(rowNumber: Int): Boolean {
+    return(0 - rowNumber <= -COUNTMATCHESWIN)
+}
+fun directionUP(rowNumber: Int,rows: Int):Boolean {
+    return (rows - 1 - rowNumber >= COUNTMATCHESWIN)
+}
+//проверка диагонали правовверх
+fun isDiagonalRightUp(playGround: MutableList<MutableList<Char>>, columnNumber: Int, rowNumber: Int,rows: Int): Boolean{
+    var countRow = 0
+    if (directionRight(playGround, columnNumber) && directionUP(rowNumber, rows)) {
+        var minSizeRow = playGround[columnNumber].size
+        for (i in columnNumber + 1..columnNumber + COUNTMATCHESWIN) {
+            if (playGround[i].size > minSizeRow) countRow++
+            minSizeRow++
+        }
+    }
+    if (countRow == COUNTMATCHESWIN) return true
+    else return false
+}
+//проверка есть ли диагональ влевовверх
+fun isDiagonalLeftUp(playGround: MutableList<MutableList<Char>>, columnNumber: Int, rowNumber: Int,rows: Int): Boolean{
+    var countRow = 0
+    if (directionLeft(columnNumber) && directionUP(rowNumber, rows)) {
+        var minSizeRow = playGround[columnNumber].size
+        for (i in columnNumber - 1 downTo columnNumber - COUNTMATCHESWIN) {
+            if (playGround[i].size > minSizeRow) countRow++
+            minSizeRow++
+        }
+    }
+    if (countRow == COUNTMATCHESWIN) return true
+    else return false
+}
+// проверка есть ли диагональ правовниз
+fun isDiagonalRightDown(playGround: MutableList<MutableList<Char>>, columnNumber: Int,rowNumber: Int): Boolean {
+    var countRow = 0
+    if (directionRight(playGround, columnNumber) && directionDown(rowNumber)) {
+        var minSizeRow = playGround[columnNumber].size - 1
+        for (i in columnNumber + 1..columnNumber + COUNTMATCHESWIN) {
+            if (playGround[i].size >= minSizeRow) countRow++
+            minSizeRow--
+        }
+    }
+    if (countRow == COUNTMATCHESWIN) return true
+    else return false
+}
+fun isDiagonalLeftDown(playGround: MutableList<MutableList<Char>>, columnNumber: Int,rowNumber: Int): Boolean {
+    var countRow = 0
+    if (directionLeft(columnNumber) && directionDown(rowNumber)) {
+        var minSizeRow = playGround[columnNumber].size - 1
+        for (i in columnNumber - 1 downTo columnNumber - COUNTMATCHESWIN) {
+            if (playGround[i].size >= minSizeRow) countRow++
+            minSizeRow--
+        }
+    }
+    if (countRow == COUNTMATCHESWIN) return true
+    else return false
+
+}
+//совпадение диагонали правовверх
+fun diagonalRightUpMathes(playGround: MutableList<MutableList<Char>>, columnNumber: Int, rowNumber: Int,ch: Char): Boolean {
+    var countMathes = 0
+    var row = rowNumber
+    for (i in columnNumber + 1..columnNumber + COUNTMATCHESWIN) {
+        if (playGround[i][row + 1] == ch) countMathes++
+        row++
+    }
+    return(countMathes == COUNTMATCHESWIN)
+
+}
+//совпаление диагонали правовниз
+fun diagonalRightDownMathes(playGround: MutableList<MutableList<Char>>, columnNumber: Int, rowNumber: Int,ch: Char): Boolean {
+    var countMathes = 0
+    var row = rowNumber
+    for (i in columnNumber + 1..columnNumber + COUNTMATCHESWIN) {
+        if (playGround[i][row - 1] == ch) countMathes++
+        row--
+    }
+    return(countMathes == COUNTMATCHESWIN)
+
+}
+//совпадение влевовниз
+fun diagonalLeftDownMathes(playGround: MutableList<MutableList<Char>>, columnNumber: Int, rowNumber: Int,ch: Char): Boolean {
+    var countMathes = 0
+    var row = rowNumber
+    for (i in columnNumber - 1 downTo columnNumber - COUNTMATCHESWIN) {
+        if (playGround[i][row - 1] == ch) countMathes++
+        row--
+    }
+    return (countMathes == COUNTMATCHESWIN)
+
+}
+//совпадение влево вверх
+
+fun diagonalLefttUpMathes(playGround: MutableList<MutableList<Char>>, columnNumber: Int, rowNumber: Int,ch: Char): Boolean {
+    var countMathes = 0
+    var row = rowNumber
+    for (i in columnNumber - 1 downTo columnNumber - COUNTMATCHESWIN) {
+        if (playGround[i][row + 1] == ch) countMathes++
+        row++
+    }
+    return(countMathes == COUNTMATCHESWIN)
+}
+//диагональ
+fun isDiagonal(playGround: MutableList<MutableList<Char>>, columnNumber: Int,rows: Int): Boolean {
+    var rowNumber = playGround[columnNumber].lastIndex
+    var ch = playGround[columnNumber][playGround[columnNumber].lastIndex]
+    when {
+        (isDiagonalRightDown(playGround, columnNumber, rowNumber)
+                && isDiagonalLeftDown(playGround, columnNumber, rowNumber)
+                && isDiagonalRightUp(playGround, columnNumber, rowNumber, rows)
+                && isDiagonalLeftUp(playGround, columnNumber, rowNumber, rows))
+        -> return (diagonalRightDownMathes(playGround, columnNumber, rowNumber, ch) ||
+                diagonalRightUpMathes(playGround, columnNumber, rowNumber, ch) ||
+                diagonalLeftDownMathes(playGround, columnNumber, rowNumber, ch) ||
+                diagonalLefttUpMathes(playGround, columnNumber, rowNumber, ch))
+
+        (isDiagonalRightDown(playGround, columnNumber, rowNumber)
+                && isDiagonalLeftDown(playGround, columnNumber, rowNumber)
+                && isDiagonalLeftUp(playGround, columnNumber, rowNumber, rows))
+        ->  return (diagonalRightDownMathes(playGround, columnNumber, rowNumber, ch) ||
+                diagonalLeftDownMathes(playGround, columnNumber, rowNumber, ch) ||
+                diagonalLefttUpMathes(playGround, columnNumber, rowNumber, ch))
+
+        (isDiagonalRightDown(playGround, columnNumber, rowNumber)
+                && isDiagonalLeftDown(playGround, columnNumber, rowNumber)
+                && isDiagonalRightUp(playGround, columnNumber, rowNumber, rows))
+        ->  return (diagonalRightDownMathes(playGround, columnNumber, rowNumber, ch) ||
+                diagonalRightUpMathes(playGround, columnNumber, rowNumber, ch) ||
+                diagonalLeftDownMathes(playGround, columnNumber, rowNumber, ch))
+
+        isDiagonalLeftUp(playGround, columnNumber, rowNumber, rows) &&
+                isDiagonalLeftDown(playGround, columnNumber, rowNumber)
+        -> return (diagonalLefttUpMathes(playGround, columnNumber, rowNumber, ch) ||
+                diagonalLeftDownMathes(playGround, columnNumber, rowNumber, ch))
+
+        isDiagonalRightDown(playGround, columnNumber, rowNumber) &&
+                isDiagonalRightUp(playGround, columnNumber, rowNumber, rows)
+        -> return (diagonalRightDownMathes(playGround, columnNumber, rowNumber, ch) ||
+                diagonalRightUpMathes(playGround, columnNumber, rowNumber, ch))
+
+        isDiagonalRightDown(playGround, columnNumber, rowNumber) &&
+                isDiagonalLeftDown(playGround, columnNumber, rowNumber)
+        -> return (diagonalRightDownMathes(playGround, columnNumber, rowNumber, ch) ||
+                diagonalLeftDownMathes(playGround, columnNumber, rowNumber, ch))
+
+        isDiagonalRightUp(playGround, columnNumber, rowNumber, rows) &&
+                isDiagonalLeftUp(playGround, columnNumber, rowNumber, rows)
+        -> return (diagonalRightUpMathes(playGround, columnNumber, rowNumber, ch) ||
+                diagonalLefttUpMathes(playGround, columnNumber, rowNumber, ch))
+
+        isDiagonalRightDown(playGround, columnNumber, rowNumber)
+        -> return (diagonalRightDownMathes(playGround, columnNumber, rowNumber, ch))
+        isDiagonalLeftDown(playGround, columnNumber, rowNumber)
+        -> return (diagonalLeftDownMathes(playGround, columnNumber, rowNumber, ch))
+        isDiagonalRightUp(playGround, columnNumber, rowNumber, rows)
+        -> return (diagonalRightUpMathes(playGround, columnNumber, rowNumber, ch))
+        isDiagonalLeftUp(playGround, columnNumber, rowNumber, rows)
+        -> return (diagonalLefttUpMathes(playGround, columnNumber, rowNumber, ch))
+    }
+    return false
+}
+fun gameOver() {
+    println("Game over!")
+}
+
+const val COUNTMATCHESWIN = 3
+const val ROWDEFAULlT = 6
+const val COLUMNDEFAULlT = 7
+fun main(args: Array<String>) {
+    println("Connect Four")
+    println("First player's name:")
+    val player1 = readLine()!!
+    println("Second player's name:")
+    val player2 = readLine()!!
+    val boardRange = 5..9
+    val regex = Regex("\\d?\\dX\\d\\d?")
+    var rows = 0
+    var columns = 0
+    while (rows !in boardRange || columns !in boardRange) {
+        println("Set the board dimensions (Rows x Columns)")
+        println("Press Enter for default (6 x 7)")
+        val input = readLine()!!.toUpperCase().replace("\t", "").replace(" ", "")
+        if (input.isEmpty()) {
+            rows = ROWDEFAULlT
+            columns = COLUMNDEFAULlT
+        } else if (!regex.matches(input)) {
+            println("Invalid input")
+        } else {
+            val boardList = input.split("X")
+            rows = boardList[0].toInt()
+            columns = boardList[1].toInt()
+            when {
+                rows !in boardRange -> println("Board rows should be from 5 to 9")
+                columns !in boardRange -> println("Board columns should be from 5 to 9")
+            }
+        }
+
+    }
+    println("$player1 VS $player2")
+    println("$rows X $columns board")
+    drawGround(columns, rows)
+    var enter = ""
+    val playGround: MutableList<MutableList<Char>> = mutableListOf()
+
+    for (i in 0 until columns) {
+        playGround.add(mutableListOf<Char>())
+    }
+
+    var columnNumber: Int = 0
+    var firstPlayer = true
+    while (true) {
+        if (firstPlayer) {
+
+            enter = checkEntry(playGround, columns, rows, player1)
+            if (enter == "end") {
+                break
+            } else {
+                columnNumber = enter.toInt()
+                playGround[columnNumber].add('o')
+                firstPlayer = false
+                draw(playGround, columns, rows)
+                when {
+                    isDiagonal(playGround, columnNumber, rows) -> {
+                        println("Player $player1 won")
+                        gameOver()
+                        break
+                    }
+                    winColumn(playGround, columnNumber, columns, rows) -> {
+                        println("Player $player1 won")
+                        gameOver()
+                        break
+                    }
+                    rowWin(playGround, columnNumber, columns, rows) -> {
+                        println("Player $player1 won")
+                        gameOver()
+                        break
+                    }
+                    itIsDraw(playGround, columns, rows) -> {
+                        println("It is a draw")
+                        gameOver()
+                        break
+                    }
+                }
+
+            }
+        } else {
+            enter = checkEntry(playGround, columns, rows, player2)
+            if (enter == "end") {
+                break
+            } else {
+                columnNumber = enter.toInt()
+                playGround[columnNumber].add('*')
+                firstPlayer = true
+                draw(playGround, columns, rows)
+                when {
+                    isDiagonal(playGround, columnNumber, rows) -> {
+                        println("Player $player2 won")
+                        gameOver()
+                        break
+                    }
+                    winColumn(playGround, columnNumber, columns, rows) -> {
+                        println("Player $player2 won")
+                        gameOver()
+                        break
+                    }
+                    rowWin(playGround, columnNumber, columns, rows) -> {
+                        println("Player $player2 won")
+                        gameOver()
+                        break
+                    }
+                    itIsDraw(playGround, columns, rows) -> {
+                        println("It is a draw")
+                        gameOver()
+                        break
+                    }
+                }
+            }
+        }
+    }
+}
